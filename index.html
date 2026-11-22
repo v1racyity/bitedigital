@@ -445,8 +445,11 @@ async function createRelease(){
  if(!title||!artistName||!artwork||!audio){alert("Заполни название релиза и имя артиста, добавь обложку и WAV-файл.");return}
  if(!/\.wav$/i.test(audio.name)){alert("Аудиофайл должен быть в формате WAV.");return}
  if(!["image/jpeg","image/png"].includes(artwork.type)){alert("Обложка должна быть в формате JPG или PNG.");return}
- const {data:{user},error:authError}=await db.auth.getUser();
- if(authError||!user){alert("Сначала войди в аккаунт.");return}
+ const {data:{session},error:authError}=await db.auth.getSession();
+ const user=session?.user;
+ if(authError||!user||!session?.access_token){alert("Сессия не найдена. Выйди из аккаунта и войди снова.");return}
+ let tokenRole="не удалось прочитать";
+ try{tokenRole=JSON.parse(atob(session.access_token.split(".")[1].replace(/-/g,"+").replace(/_/g,"/"))).role||tokenRole}catch(e){}
  const {data:release,error}=await db.from("bite_releases").insert({
   user_id:user.id,title,release_type:type,genre:genre||null,release_date:date||null,
   metadata_language:language,artist_name:artistName,artist_legal_name:artistLegalName||null,
@@ -454,7 +457,7 @@ async function createRelease(){
   copyright_text:document.getElementById("copyrightText").value.trim()||null,
   phonogram_text:document.getElementById("phonogramText").value.trim()||null,territory:"Worldwide"
  }).select("id").single();
- if(error){alert("Не удалось создать релиз: "+error.message);return}
+ if(error){alert("Не удалось создать релиз: "+error.message+"\\nID пользователя: "+user.id+"\\nРоль сессии: "+tokenRole+"\\nID сессии: "+session.user.id);return}
  const releaseId=release.id;
  const safeName=name=>name.replace(/[^a-zA-Z0-9._-]/g,"_");
  const artworkPath=user.id+"/"+releaseId+"/artwork-"+Date.now()+"-"+safeName(artwork.name);

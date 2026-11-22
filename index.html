@@ -1,203 +1,326 @@
 
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>BITE Digital</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BITE Digital — Artist Portal</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box}
-body{margin:0;background:#080b0b;color:white;font-family:Inter,Arial,sans-serif}
-header{padding:24px 7%;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #252b2b}
+body{margin:0;background:#090c0c;color:#f5f7f7;font-family:Inter,Arial,sans-serif}
+:root{--mint:#5ad6cc;--panel:#111818;--line:#263333;--muted:#899695}
+button,input,select{font:inherit}
+button{cursor:pointer}
+.hidden{display:none!important}
+.auth{max-width:440px;margin:65px auto;padding:28px;background:var(--panel);border:1px solid var(--line);border-radius:20px}
 .logo{font-size:25px;font-weight:900;letter-spacing:2px}
-.logo span{color:#5ad6cc}
-main{max-width:850px;margin:65px auto;padding:20px}
-h1{font-size:clamp(38px,8vw,65px);margin:0 0 15px}
-h1 span{color:#5ad6cc}
-p{color:#aab4b3;line-height:1.6}
-.card{background:#111818;border:1px solid #263333;border-radius:18px;padding:25px;margin:25px 0}
-input,select{width:100%;padding:15px;margin:8px 0 15px;background:#080e0e;border:1px solid #344444;border-radius:9px;color:white;font-size:15px}
-button{background:#5ad6cc;color:#061010;border:0;border-radius:9px;padding:14px 20px;font-weight:800;cursor:pointer;margin:5px 5px 5px 0}
-button.secondary{background:#263333;color:white}
-label{font-size:13px;color:#b8c4c3}
-.hidden{display:none}
-.release{padding:15px 0;border-bottom:1px solid #293333}
-#message{color:#5ad6cc;min-height:25px}
+.logo span{color:var(--mint)}
+.auth h1{font-size:36px;margin:35px 0 8px}
+.auth p,.muted{color:var(--muted);line-height:1.6}
+label{display:block;font-size:12px;color:#aab7b6;margin:13px 0 7px}
+input,select{width:100%;padding:14px;background:#090e0e;color:white;border:1px solid #344343;border-radius:9px;outline:none}
+input:focus,select:focus{border-color:var(--mint)}
+button.primary{background:var(--mint);color:#061010;border:0;padding:13px 18px;border-radius:9px;font-weight:800}
+button.secondary{background:#202a2a;color:white;border:1px solid #344343;padding:12px 16px;border-radius:9px}
+.auth button{width:100%;margin-top:12px}
+#message{color:var(--mint);font-size:13px;min-height:20px;margin-top:15px}
+.app{min-height:100vh;display:grid;grid-template-columns:245px 1fr}
+.sidebar{background:#0d1212;border-right:1px solid var(--line);padding:27px 18px;display:flex;flex-direction:column}
+.brand{padding:0 12px 30px;border-bottom:1px solid var(--line)}
+.brand small{display:block;color:var(--muted);font-size:10px;letter-spacing:3px;margin-top:7px}
+.nav-title{font-size:10px;letter-spacing:2px;color:#687675;margin:25px 12px 10px}
+.nav button{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:transparent;border:0;color:#aab5b4;padding:13px 12px;border-radius:9px;margin:3px 0}
+.nav button.active,.nav button:hover{background:#192626;color:var(--mint)}
+.nav .symbol{width:20px;text-align:center;font-size:17px}
+.sidebar-bottom{margin-top:auto;border-top:1px solid var(--line);padding-top:17px}
+.user-mini{padding:10px 12px;color:var(--muted);font-size:12px;overflow-wrap:anywhere}
+.main{min-width:0;padding:35px 4.5% 60px}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:38px}
+.topbar small{color:var(--muted)}
+.top-actions{display:flex;gap:10px;align-items:center}
+.avatar{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:#1c3432;color:var(--mint);font-weight:800}
+h1{font-size:clamp(27px,4vw,38px);margin:0 0 8px;letter-spacing:-1px}
+h1 span{color:var(--mint)}
+.subtitle{color:var(--muted);margin:0 0 28px}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px;margin:28px 0}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:21px}
+.stat small{color:var(--muted)}
+.stat strong{display:block;font-size:31px;margin-top:13px}
+.stat em{font-size:11px;color:var(--mint);font-style:normal}
+.section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:35px 0 15px}
+.section-head h2{font-size:19px;margin:0}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}
+.release-row{display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--line)}
+.release-row:last-child{border:0}
+.cover{width:54px;height:54px;border-radius:9px;background:#1c3331;display:grid;place-items:center;color:var(--mint);font-weight:900;flex-shrink:0}
+.release-info{flex:1;min-width:0}
+.release-info strong{display:block;overflow-wrap:anywhere}
+.release-info small{color:var(--muted);display:block;margin-top:6px}
+.status{font-size:11px;padding:7px 10px;border-radius:20px;background:#24312e;color:var(--mint);white-space:nowrap}
+.empty{text-align:center;padding:35px 10px;color:var(--muted)}
+.view{display:none}
+.view.active{display:block}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}
+.form-grid .full{grid-column:1/-1}
+.form-actions{margin-top:20px}
+.profile-box{max-width:650px}
+.mobile-brand{display:none}
+@media(max-width:760px){
+ .app{display:block}
+ .sidebar{padding:15px 14px;border-right:0;border-bottom:1px solid var(--line)}
+ .brand{padding:0 5px 13px}
+ .brand small{display:inline;margin-left:8px}
+ .nav-title,.sidebar-bottom{display:none}
+ .nav{display:flex;overflow-x:auto;gap:5px;margin-top:12px}
+ .nav button{width:auto;white-space:nowrap;padding:10px;font-size:12px}
+ .nav .symbol{display:none}
+ .main{padding:25px 17px 45px}
+ .topbar{margin-bottom:27px}
+ .stats{gap:9px}
+ .stat{padding:14px 11px}
+ .stat strong{font-size:25px}
+ .stat small{font-size:11px}
+ .form-grid{grid-template-columns:1fr}
+ .form-grid .full{grid-column:auto}
+}
 </style>
 </head>
 <body>
-<header>
-<div class="logo">BITE<span>.</span> DIGITAL</div>
-<div>ARTIST PLATFORM</div>
-</header>
 
-<main>
-<h1>YOUR MUSIC.<br><span>YOUR WORLD.</span></h1>
-<p>Музыкальная платформа для артистов. Загружай релизы и развивай свою музыку вместе с BITE Digital.</p>
-
-<section id="auth" class="card">
-<h2>Личный кабинет</h2>
-<p>Создай аккаунт или войди в существующий.</p>
-<label>Email</label>
-<input id="email" type="email" placeholder="Твоя почта">
-<label>Пароль</label>
-<input id="password" type="password" placeholder="Пароль">
-<label>Имя артиста</label>
-<input id="artist" placeholder="Artist name">
-<button onclick="register()">Регистрация</button>
-<button class="secondary" onclick="login()">Войти</button>
+<section id="auth" class="auth">
+ <div class="logo">BITE<span>.</span> DIGITAL</div>
+ <h1>YOUR MUSIC.<br><span style="color:var(--mint)">YOUR WORLD.</span></h1>
+ <p>Личный кабинет артиста BITE Digital.</p>
+ <label>Email</label>
+ <input id="email" type="email" placeholder="Твоя почта">
+ <label>Пароль</label>
+ <input id="password" type="password" placeholder="Пароль">
+ <label>Имя артиста</label>
+ <input id="artist" placeholder="Artist name">
+ <button class="primary" onclick="register()">Создать аккаунт</button>
+ <button class="secondary" onclick="login()">Войти в кабинет</button>
+ <div id="message"></div>
 </section>
 
-<section id="dashboard" class="hidden">
-<div class="card">
-<h2>Добро пожаловать в BITE</h2>
-<p id="userEmail"></p>
-<button class="secondary" onclick="logout()">Выйти</button>
-</div>
+<div id="app" class="app hidden">
+ <aside class="sidebar">
+  <div class="brand">
+   <div class="logo">BITE<span>.</span></div>
+   <small>DIGITAL LABEL</small>
+  </div>
+  <div class="nav-title">МЕНЮ</div>
+  <nav class="nav">
+   <button class="active" onclick="showView('home',this)"><span class="symbol">⌂</span>Главная</button>
+   <button onclick="showView('releases',this)"><span class="symbol">♫</span>Мои релизы</button>
+   <button onclick="showView('new',this)"><span class="symbol">＋</span>Создать релиз</button>
+   <button onclick="showView('profile',this)"><span class="symbol">◎</span>Профиль</button>
+  </nav>
+  <div class="sidebar-bottom">
+   <div class="user-mini" id="sideEmail"></div>
+   <button class="secondary" style="width:100%" onclick="logout()">Выйти из аккаунта</button>
+  </div>
+ </aside>
 
-<div class="card">
-<h2>Новый релиз</h2>
-<label>Название релиза</label>
-<input id="releaseTitle" placeholder="Название">
-<label>Тип релиза</label>
-<select id="releaseType">
-<option>Single</option>
-<option>EP</option>
-<option>Album</option>
-</select>
-<label>Жанр</label>
-<input id="genre" placeholder="Например, Pop">
-<label>Дата релиза</label>
-<input id="releaseDate" type="date">
-<button onclick="createRelease()">Отправить релиз</button>
-</div>
+ <main class="main">
+  <div class="topbar">
+   <div><small>ARTIST PORTAL / BITE DIGITAL</small></div>
+   <div class="top-actions"><div class="avatar" id="avatar">B</div></div>
+  </div>
 
-<div class="card">
-<h2>Мои релизы</h2>
-<div id="releases">Загрузка...</div>
+  <section id="home" class="view active">
+   <h1>Добро пожаловать в <span>BITE.</span></h1>
+   <p class="subtitle">Твоя музыка. Твоя карьера. Твоя платформа.</p>
+   <button class="primary" onclick="showView('new')">＋ Создать релиз</button>
+   <div class="stats">
+    <div class="stat"><small>Всего релизов</small><strong id="total">0</strong><em>В твоём кабинете</em></div>
+    <div class="stat"><small>На проверке</small><strong id="pending">0</strong><em>Ожидают рассмотрения</em></div>
+    <div class="stat"><small>Опубликовано</small><strong id="published">0</strong><em>В кабинете</em></div>
+   </div>
+   <div class="section-head"><h2>Последние релизы</h2><button class="secondary" onclick="showView('releases')">Все релизы →</button></div>
+   <div class="panel" id="recent"><div class="empty">Загружаем релизы...</div></div>
+  </section>
+
+  <section id="releases" class="view">
+   <h1>Мои <span>релизы</span></h1>
+   <p class="subtitle">Все отправленные тобой релизы в одном месте.</p>
+   <div class="panel" id="allReleases"><div class="empty">Загружаем...</div></div>
+  </section>
+
+  <section id="new" class="view">
+   <h1>Создать <span>релиз</span></h1>
+   <p class="subtitle">Заполни основную информацию о своей музыке.</p>
+   <div class="panel">
+    <div class="form-grid">
+     <div class="full">
+      <label>Название релиза *</label>
+      <input id="releaseTitle" placeholder="Название трека или альбома">
+     </div>
+     <div>
+      <label>Тип релиза *</label>
+      <select id="releaseType"><option>Single</option><option>EP</option><option>Album</option></select>
+     </div>
+     <div>
+      <label>Жанр</label>
+      <input id="genre" placeholder="Например, Pop">
+     </div>
+     <div>
+      <label>Дата выхода</label>
+      <input id="releaseDate" type="date">
+     </div>
+     <div>
+      <label>Язык релиза</label>
+      <select id="language"><option>English</option><option>Russian</option><option>Spanish</option><option>Other</option></select>
+     </div>
+    </div>
+    <div class="form-actions">
+     <button class="primary" onclick="createRelease()">Отправить на проверку →</button>
+     <p class="muted" style="font-size:12px">Пока отправляется базовая информация. Загрузка аудио и обложки будет добавлена следующим этапом.</p>
+    </div>
+   </div>
+  </section>
+
+  <section id="profile" class="view">
+   <h1>Мой <span>профиль</span></h1>
+   <p class="subtitle">Информация о твоём аккаунте.</p>
+   <div class="panel profile-box">
+    <label>Email аккаунта</label>
+    <input id="profileEmail" disabled>
+    <label>Имя артиста</label>
+    <input id="profileArtist" disabled>
+    <p class="muted">Изменение данных профиля добавим в следующем обновлении.</p>
+   </div>
+  </section>
+ </main>
 </div>
-</section>
-<p id="message"></p>
-</main>
 
 <script>
-const SUPABASE_URL = "https://vlabwhizctfwrvqhanno.supabase.co";
-const SUPABASE_KEY = "sb_publishable_NdmB_ZmDLb_gOjPiSDD1Jw_x2uoetfs";
-const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const SUPABASE_URL="https://vlabwhizctfwrvqhanno.supabase.co";
+const SUPABASE_KEY="sb_publishable_NdmB_ZmDLb_gOjPiSDD1Jw_x2uoetfs";
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+let currentUser=null;
 
-function msg(text){
- document.getElementById("message").textContent=text;
-}
+function msg(t){document.getElementById("message").textContent=t}
 
 async function register(){
  const email=document.getElementById("email").value.trim();
  const password=document.getElementById("password").value;
  const artist=document.getElementById("artist").value.trim();
-
- if(!email || !password || !artist){
-  msg("Заполни почту, пароль и имя артиста.");
-  return;
- }
- if(password.length<6){
-  msg("Пароль должен содержать минимум 6 символов.");
-  return;
- }
-
- const {data,error}=await db.auth.signUp({
-  email,password,
-  options:{data:{artist_name:artist}}
- });
-
- if(error){msg(error.message);return;}
- if(data.session){
-  msg("Регистрация успешна!");
-  showDashboard(data.session.user);
- }else{
-  msg("Аккаунт создан. Проверь почту и подтверди регистрацию, затем войди.");
- }
+ if(!email||!password||!artist){msg("Заполни все поля.");return}
+ if(password.length<6){msg("Пароль должен содержать минимум 6 символов.");return}
+ const {data,error}=await db.auth.signUp({email,password,options:{data:{artist_name:artist}}});
+ if(error){msg(error.message);return}
+ if(data.session){openApp(data.user)}
+ else{msg("Аккаунт создан. Теперь войди в кабинет.")}
 }
 
 async function login(){
  const email=document.getElementById("email").value.trim();
  const password=document.getElementById("password").value;
-
  const {data,error}=await db.auth.signInWithPassword({email,password});
- if(error){msg(error.message);return;}
- msg("Вход выполнен!");
- showDashboard(data.user);
+ if(error){msg(error.message);return}
+ openApp(data.user);
 }
 
 async function logout(){
  await db.auth.signOut();
- document.getElementById("dashboard").classList.add("hidden");
+ currentUser=null;
+ document.getElementById("app").classList.add("hidden");
  document.getElementById("auth").classList.remove("hidden");
  msg("Ты вышла из аккаунта.");
 }
 
-async function showDashboard(user){
+function openApp(user){
+ currentUser=user;
  document.getElementById("auth").classList.add("hidden");
- document.getElementById("dashboard").classList.remove("hidden");
- document.getElementById("userEmail").textContent=user.email;
- await loadReleases();
+ document.getElementById("app").classList.remove("hidden");
+ document.getElementById("sideEmail").textContent=user.email;
+ document.getElementById("avatar").textContent=(user.user_metadata?.artist_name||user.email||"B").charAt(0).toUpperCase();
+ document.getElementById("profileEmail").value=user.email||"";
+ document.getElementById("profileArtist").value=user.user_metadata?.artist_name||"";
+ loadReleases();
+}
+
+function showView(id,button){
+ document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+ document.getElementById(id).classList.add("active");
+ document.querySelectorAll(".nav button").forEach(b=>b.classList.remove("active"));
+ if(button)button.classList.add("active");
+ else{
+  const match=[...document.querySelectorAll(".nav button")].find(b=>b.getAttribute("onclick")?.includes("'"+id+"'"));
+  if(match)match.classList.add("active");
+ }
+}
+
+function releaseElement(r){
+ const row=document.createElement("div");
+ row.className="release-row";
+ const cover=document.createElement("div");
+ cover.className="cover";
+ cover.textContent="B.";
+ const info=document.createElement("div");
+ info.className="release-info";
+ const name=document.createElement("strong");
+ name.textContent=r.title;
+ const detail=document.createElement("small");
+ detail.textContent=r.release_type+" · "+(r.genre||"Жанр не указан")+(r.release_date?" · "+r.release_date:"");
+ info.append(name,detail);
+ const status=document.createElement("span");
+ status.className="status";
+ status.textContent=r.status||"На проверке";
+ row.append(cover,info,status);
+ return row;
+}
+
+async function loadReleases(){
+ if(!currentUser)return;
+ const {data,error}=await db.from("bite_releases").select("*").eq("user_id",currentUser.id).order("created_at",{ascending:false});
+ if(error){
+  document.getElementById("recent").textContent=error.message;
+  document.getElementById("allReleases").textContent=error.message;
+  return;
+ }
+ const releases=data||[];
+ document.getElementById("total").textContent=releases.length;
+ document.getElementById("pending").textContent=releases.filter(r=>r.status==="На проверке").length;
+ document.getElementById("published").textContent=releases.filter(r=>r.status==="Опубликован"||r.status==="Опубликовано").length;
+ const recent=document.getElementById("recent");
+ const all=document.getElementById("allReleases");
+ recent.innerHTML="";
+ all.innerHTML="";
+ if(!releases.length){
+  recent.innerHTML='<div class="empty">Пока нет релизов. Отправь свой первый релиз в BITE!</div>';
+  all.innerHTML='<div class="empty">Здесь появятся твои релизы.</div>';
+  return;
+ }
+ releases.slice(0,4).forEach(r=>recent.appendChild(releaseElement(r)));
+ releases.forEach(r=>all.appendChild(releaseElement(r)));
 }
 
 async function createRelease(){
- const {data:{user}}=await db.auth.getUser();
- if(!user){msg("Сначала войди в аккаунт.");return;}
-
  const title=document.getElementById("releaseTitle").value.trim();
  const type=document.getElementById("releaseType").value;
  const genre=document.getElementById("genre").value.trim();
  const date=document.getElementById("releaseDate").value;
-
- if(!title){msg("Укажи название релиза.");return;}
-
+ const language=document.getElementById("language").value;
+ if(!title){alert("Укажи название релиза.");return}
+ const {data:{user},error:authError}=await db.auth.getUser();
+ if(authError||!user){alert("Сначала войди в аккаунт.");return}
  const {error}=await db.from("bite_releases").insert({
-  user_id:user.id,
-  title:title,
-  release_type:type,
-  genre:genre || null,
-  release_date:date || null
+  user_id:user.id,title,release_type:type,genre:genre||null,
+  release_date:date||null,metadata_language:language
  });
-
- if(error){msg(error.message);return;}
-
- msg("Релиз отправлен!");
+ if(error){alert(error.message);return}
+ alert("Релиз отправлен на проверку!");
  document.getElementById("releaseTitle").value="";
  document.getElementById("genre").value="";
  document.getElementById("releaseDate").value="";
  await loadReleases();
-}
-
-async function loadReleases(){
- const {data:{user}}=await db.auth.getUser();
- if(!user)return;
-
- const {data,error}=await db.from("bite_releases")
-  .select("*")
-  .eq("user_id",user.id)
-  .order("created_at",{ascending:false});
-
- const area=document.getElementById("releases");
- if(error){area.textContent=error.message;return;}
- if(!data || data.length===0){
-  area.textContent="Пока нет отправленных релизов.";
-  return;
- }
-
- area.innerHTML="";
- data.forEach(release=>{
-  const item=document.createElement("div");
-  item.className="release";
-  item.textContent=release.title+" — "+release.release_type+" — "+release.status;
-  area.appendChild(item);
- });
+ showView("releases");
 }
 
 db.auth.getSession().then(({data})=>{
- if(data.session)showDashboard(data.session.user);
+ if(data.session)openApp(data.session.user);
 });
 </script>
 </body>

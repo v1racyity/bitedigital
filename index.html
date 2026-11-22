@@ -172,10 +172,23 @@ h1 span{color:var(--mint)}
       <label>Язык релиза</label>
       <select id="language"><option>English</option><option>Russian</option><option>Spanish</option><option>Other</option></select>
      </div>
+     <div><label>Сценическое имя артиста *</label><input id="artistName" placeholder="Artist name"></div>
+     <div><label>ФИО артиста</label><input id="artistLegalName" placeholder="Имя и фамилия по документам"></div>
+     <div class="full"><label>Обложка релиза (JPG или PNG) *</label><input id="artworkFile" type="file" accept="image/jpeg,image/png"></div>
+     <div class="full"><label>Аудиофайл трека (WAV) *</label><input id="audioFile" type="file" accept=".wav,audio/wav,audio/x-wav"></div>
+     <div><label>Название трека *</label><input id="trackTitle" placeholder="Название трека"></div>
+     <div><label>Версия трека</label><input id="trackVersion" placeholder="Original / Radio Edit"></div>
+     <div><label>Композитор</label><input id="composer" placeholder="ФИО композитора"></div>
+     <div><label>Автор текста</label><input id="lyricist" placeholder="ФИО автора текста"></div>
+     <div><label>Продюсер</label><input id="producer" placeholder="Имя продюсера"></div>
+     <div><label>ISRC (если есть)</label><input id="isrc" placeholder="Код ISRC"></div>
+     <div class="full"><label>© Авторские права</label><input id="copyrightText" placeholder="© 2026 Имя правообладателя"></div>
+     <div class="full"><label>℗ Права на фонограмму</label><input id="phonogramText" placeholder="℗ 2026 Имя правообладателя"></div>
+     <div class="full"><label style="display:flex;align-items:center;gap:10px;font-size:13px"><input id="aiGenerated" type="checkbox" style="width:auto;accent-color:var(--mint)">В создании музыки или вокала использовался искусственный интеллект</label></div>
     </div>
     <div class="form-actions">
      <button class="primary" onclick="createRelease()">Отправить на проверку →</button>
-     <p class="muted" style="font-size:12px">Пока отправляется базовая информация. Загрузка аудио и обложки будет добавлена следующим этапом.</p>
+     <p class="muted" style="font-size:12px">Обложка и WAV загрузятся в хранилище BITE. Проверь правильность метаданных перед отправкой.</p>
     </div>
    </div>
   </section>
@@ -303,20 +316,50 @@ async function createRelease(){
  const genre=document.getElementById("genre").value.trim();
  const date=document.getElementById("releaseDate").value;
  const language=document.getElementById("language").value;
- if(!title){alert("Укажи название релиза.");return}
+ const artistName=document.getElementById("artistName").value.trim();
+ const artistLegalName=document.getElementById("artistLegalName").value.trim();
+ const artwork=document.getElementById("artworkFile").files[0];
+ const audio=document.getElementById("audioFile").files[0];
+ const trackTitle=document.getElementById("trackTitle").value.trim()||title;
+ if(!title||!artistName||!artwork||!audio){alert("Заполни название релиза и имя артиста, добавь обложку и WAV-файл.");return}
+ if(!/\.wav$/i.test(audio.name)){alert("Аудиофайл должен быть в формате WAV.");return}
+ if(!["image/jpeg","image/png"].includes(artwork.type)){alert("Обложка должна быть в формате JPG или PNG.");return}
  const {data:{user},error:authError}=await db.auth.getUser();
  if(authError||!user){alert("Сначала войди в аккаунт.");return}
- const {error}=await db.from("bite_releases").insert({
-  user_id:user.id,title,release_type:type,genre:genre||null,
-  release_date:date||null,metadata_language:language
+ const {data:release,error}=await db.from("bite_releases").insert({
+  user_id:user.id,title,release_type:type,genre:genre||null,release_date:date||null,
+  metadata_language:language,artist_name:artistName,artist_legal_name:artistLegalName||null,
+  ai_generated:document.getElementById("aiGenerated").checked,
+  copyright_text:document.getElementById("copyrightText").value.trim()||null,
+  phonogram_text:document.getElementById("phonogramText").value.trim()||null,territory:"Worldwide"
+ }).select("id").single();
+ if(error){alert("Не удалось создать релиз: "+error.message);return}
+ const releaseId=release.id;
+ const safeName=name=>name.replace(/[^a-zA-Z0-9._-]/g,"_");
+ const artworkPath=user.id+"/"+releaseId+"/artwork-"+Date.now()+"-"+safeName(artwork.name);
+ const audioPath=user.id+"/"+releaseId+"/audio-"+Date.now()+"-"+safeName(audio.name);
+ const storage=db.storage.from("bite-release-files");
+ const {error:artError}=await storage.upload(artworkPath,artwork,{contentType:artwork.type,upsert:false});
+ if(artError){alert("Релиз создан, но обложка не загрузилась: "+artError.message);return}
+ const {error:audioError}=await storage.upload(audioPath,audio,{contentType:"audio/wav",upsert:false});
+ if(audioError){alert("Обложка загружена, но WAV не загрузился: "+audioError.message);return}
+ const {error:updateError}=await db.from("bite_releases").update({artwork_path:artworkPath}).eq("id",releaseId).eq("user_id",user.id);
+ if(updateError){alert("Файлы загружены, но не удалось сохранить путь обложки: "+updateError.message);return}
+ const {error:trackError}=await db.from("bite_tracks").insert({
+  release_id:releaseId,user_id:user.id,title:trackTitle,
+  version:document.getElementById("trackVersion").value.trim()||null,audio_path:audioPath,audio_format:"WAV",
+  isrc:document.getElementById("isrc").value.trim()||null,language,genre:genre||null,
+  composer:document.getElementById("composer").value.trim()||null,
+  lyricist:document.getElementById("lyricist").value.trim()||null,
+  producer:document.getElementById("producer").value.trim()||null
  });
- if(error){alert(error.message);return}
- alert("Релиз отправлен на проверку!");
- document.getElementById("releaseTitle").value="";
- document.getElementById("genre").value="";
- document.getElementById("releaseDate").value="";
- await loadReleases();
- showView("releases");
+ if(trackError){alert("Релиз и файлы созданы, но данные трека не сохранились: "+trackError.message);return}
+ alert("Релиз и файлы успешно отправлены на проверку!");
+ ["releaseTitle","genre","releaseDate","artistName","artistLegalName","trackTitle","trackVersion","composer","lyricist","producer","isrc","copyrightText","phonogramText"].forEach(id=>document.getElementById(id).value="");
+ document.getElementById("artworkFile").value="";
+ document.getElementById("audioFile").value="";
+ document.getElementById("aiGenerated").checked=false;
+ await loadReleases();showView("releases");
 }
 
 db.auth.getSession().then(({data})=>{

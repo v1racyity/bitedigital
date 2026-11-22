@@ -1,1 +1,204 @@
 
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BITE Digital</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#080b0b;color:white;font-family:Inter,Arial,sans-serif}
+header{padding:24px 7%;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #252b2b}
+.logo{font-size:25px;font-weight:900;letter-spacing:2px}
+.logo span{color:#5ad6cc}
+main{max-width:850px;margin:65px auto;padding:20px}
+h1{font-size:clamp(38px,8vw,65px);margin:0 0 15px}
+h1 span{color:#5ad6cc}
+p{color:#aab4b3;line-height:1.6}
+.card{background:#111818;border:1px solid #263333;border-radius:18px;padding:25px;margin:25px 0}
+input,select{width:100%;padding:15px;margin:8px 0 15px;background:#080e0e;border:1px solid #344444;border-radius:9px;color:white;font-size:15px}
+button{background:#5ad6cc;color:#061010;border:0;border-radius:9px;padding:14px 20px;font-weight:800;cursor:pointer;margin:5px 5px 5px 0}
+button.secondary{background:#263333;color:white}
+label{font-size:13px;color:#b8c4c3}
+.hidden{display:none}
+.release{padding:15px 0;border-bottom:1px solid #293333}
+#message{color:#5ad6cc;min-height:25px}
+</style>
+</head>
+<body>
+<header>
+<div class="logo">BITE<span>.</span> DIGITAL</div>
+<div>ARTIST PLATFORM</div>
+</header>
+
+<main>
+<h1>YOUR MUSIC.<br><span>YOUR WORLD.</span></h1>
+<p>Музыкальная платформа для артистов. Загружай релизы и развивай свою музыку вместе с BITE Digital.</p>
+
+<section id="auth" class="card">
+<h2>Личный кабинет</h2>
+<p>Создай аккаунт или войди в существующий.</p>
+<label>Email</label>
+<input id="email" type="email" placeholder="Твоя почта">
+<label>Пароль</label>
+<input id="password" type="password" placeholder="Пароль">
+<label>Имя артиста</label>
+<input id="artist" placeholder="Artist name">
+<button onclick="register()">Регистрация</button>
+<button class="secondary" onclick="login()">Войти</button>
+</section>
+
+<section id="dashboard" class="hidden">
+<div class="card">
+<h2>Добро пожаловать в BITE</h2>
+<p id="userEmail"></p>
+<button class="secondary" onclick="logout()">Выйти</button>
+</div>
+
+<div class="card">
+<h2>Новый релиз</h2>
+<label>Название релиза</label>
+<input id="releaseTitle" placeholder="Название">
+<label>Тип релиза</label>
+<select id="releaseType">
+<option>Single</option>
+<option>EP</option>
+<option>Album</option>
+</select>
+<label>Жанр</label>
+<input id="genre" placeholder="Например, Pop">
+<label>Дата релиза</label>
+<input id="releaseDate" type="date">
+<button onclick="createRelease()">Отправить релиз</button>
+</div>
+
+<div class="card">
+<h2>Мои релизы</h2>
+<div id="releases">Загрузка...</div>
+</div>
+</section>
+<p id="message"></p>
+</main>
+
+<script>
+const SUPABASE_URL = "https://vlabwhizctfwrvqhanno.supabase.co";
+const SUPABASE_KEY = "sb_publishable_NdmB_ZmDLb_gOjPiSDD1Jw_x2uoetfs";
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+function msg(text){
+ document.getElementById("message").textContent=text;
+}
+
+async function register(){
+ const email=document.getElementById("email").value.trim();
+ const password=document.getElementById("password").value;
+ const artist=document.getElementById("artist").value.trim();
+
+ if(!email || !password || !artist){
+  msg("Заполни почту, пароль и имя артиста.");
+  return;
+ }
+ if(password.length<6){
+  msg("Пароль должен содержать минимум 6 символов.");
+  return;
+ }
+
+ const {data,error}=await db.auth.signUp({
+  email,password,
+  options:{data:{artist_name:artist}}
+ });
+
+ if(error){msg(error.message);return;}
+ if(data.session){
+  msg("Регистрация успешна!");
+  showDashboard(data.session.user);
+ }else{
+  msg("Аккаунт создан. Проверь почту и подтверди регистрацию, затем войди.");
+ }
+}
+
+async function login(){
+ const email=document.getElementById("email").value.trim();
+ const password=document.getElementById("password").value;
+
+ const {data,error}=await db.auth.signInWithPassword({email,password});
+ if(error){msg(error.message);return;}
+ msg("Вход выполнен!");
+ showDashboard(data.user);
+}
+
+async function logout(){
+ await db.auth.signOut();
+ document.getElementById("dashboard").classList.add("hidden");
+ document.getElementById("auth").classList.remove("hidden");
+ msg("Ты вышла из аккаунта.");
+}
+
+async function showDashboard(user){
+ document.getElementById("auth").classList.add("hidden");
+ document.getElementById("dashboard").classList.remove("hidden");
+ document.getElementById("userEmail").textContent=user.email;
+ await loadReleases();
+}
+
+async function createRelease(){
+ const {data:{user}}=await db.auth.getUser();
+ if(!user){msg("Сначала войди в аккаунт.");return;}
+
+ const title=document.getElementById("releaseTitle").value.trim();
+ const type=document.getElementById("releaseType").value;
+ const genre=document.getElementById("genre").value.trim();
+ const date=document.getElementById("releaseDate").value;
+
+ if(!title){msg("Укажи название релиза.");return;}
+
+ const {error}=await db.from("bite_releases").insert({
+  user_id:user.id,
+  title:title,
+  release_type:type,
+  genre:genre || null,
+  release_date:date || null
+ });
+
+ if(error){msg(error.message);return;}
+
+ msg("Релиз отправлен!");
+ document.getElementById("releaseTitle").value="";
+ document.getElementById("genre").value="";
+ document.getElementById("releaseDate").value="";
+ await loadReleases();
+}
+
+async function loadReleases(){
+ const {data:{user}}=await db.auth.getUser();
+ if(!user)return;
+
+ const {data,error}=await db.from("bite_releases")
+  .select("*")
+  .eq("user_id",user.id)
+  .order("created_at",{ascending:false});
+
+ const area=document.getElementById("releases");
+ if(error){area.textContent=error.message;return;}
+ if(!data || data.length===0){
+  area.textContent="Пока нет отправленных релизов.";
+  return;
+ }
+
+ area.innerHTML="";
+ data.forEach(release=>{
+  const item=document.createElement("div");
+  item.className="release";
+  item.textContent=release.title+" — "+release.release_type+" — "+release.status;
+  area.appendChild(item);
+ });
+}
+
+db.auth.getSession().then(({data})=>{
+ if(data.session)showDashboard(data.session.user);
+});
+</script>
+</body>
+</html>

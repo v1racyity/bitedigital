@@ -84,6 +84,78 @@ h1 span{color:var(--mint)}
  .form-grid{grid-template-columns:1fr}
  .form-grid .full{grid-column:auto}
 }
+
+/* BITE interface refresh — ZVONKO-inspired structure */
+:root{
+ --mint:#28b8ad;--panel:#ffffff;--line:#e5e9ec;--muted:#7b8790;
+ --ink:#202a31;--page:#f5f7f8;--soft:#eef8f7;
+}
+body{background:var(--page);color:var(--ink);font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+.auth{background:#fff;border:1px solid #e7ebee;border-radius:12px;box-shadow:0 12px 36px rgba(25,42,50,.06);color:var(--ink)}
+.auth p,.muted,.subtitle{color:#78858d}
+label{color:#5e6b73;font-weight:600}
+input,select{background:#fff;color:#202a31;border:1px solid #d9e0e4;border-radius:7px;padding:12px 13px}
+input:focus,select:focus{border-color:#28b8ad;box-shadow:0 0 0 3px rgba(40,184,173,.10)}
+button.primary{background:#28b8ad;color:#fff;border-radius:7px;padding:12px 18px}
+button.primary:hover{background:#219f96}
+button.secondary{background:#fff;color:#34424a;border:1px solid #dce3e7;border-radius:7px}
+#message{color:#219f96}
+.app{grid-template-columns:250px minmax(0,1fr);background:#f5f7f8}
+.sidebar{background:#fff;border-right:1px solid #e5e9ec;padding:25px 17px;color:#26343b}
+.brand{border-bottom:1px solid #edf0f2;padding:0 12px 25px}
+.logo{color:#202a31;letter-spacing:1.2px}
+.logo span{color:#28b8ad}
+.brand small{color:#8b969c;letter-spacing:2px}
+.nav-title{color:#9aa4aa;font-weight:700;letter-spacing:1.4px}
+.nav button{color:#59666e;border-radius:7px;padding:12px 13px;font-weight:500}
+.nav button.active,.nav button:hover{background:#eaf7f6;color:#168f87}
+.nav .symbol{font-size:16px}
+.sidebar-bottom{border-top:1px solid #edf0f2}
+.user-mini{color:#7b8790}
+.main{padding:30px clamp(20px,4vw,58px) 60px;max-width:1600px;width:100%;margin:0 auto}
+.topbar{min-height:54px;margin-bottom:35px;border-bottom:1px solid #e8edef;padding-bottom:18px}
+.topbar small{color:#8a969d;font-size:11px;letter-spacing:1px}
+.avatar{background:#e6f6f4;color:#168f87}
+h1{font-size:30px;letter-spacing:-.7px;color:#202a31}
+h1 span{color:#1da99f}
+.subtitle{font-size:14px}
+.stats{gap:16px;margin:25px 0 34px}
+.stat{background:#fff;border:1px solid #e7ecef;border-radius:10px;padding:20px 22px;box-shadow:0 2px 8px rgba(20,40,50,.025)}
+.stat small{color:#7b8790;font-size:12px}
+.stat strong{color:#202a31;font-size:29px;margin-top:12px}
+.stat em{color:#239c93}
+.section-head{margin:32px 0 14px}
+.section-head h2{font-size:17px;color:#26343b}
+.panel{background:#fff;border:1px solid #e5eaed;border-radius:10px;padding:22px;box-shadow:0 2px 8px rgba(20,40,50,.025)}
+.release-row{border-bottom:1px solid #edf0f2;padding:15px 2px}
+.cover{background:#e9f7f5;color:#168f87;border-radius:7px}
+.release-info strong{color:#26343b;font-size:14px}
+.release-info small{color:#849097}
+.status{background:#eaf7f2;color:#23815f;border-radius:5px;font-weight:600}
+.empty{color:#89959b}
+.form-grid{gap:0 20px}
+.form-actions{border-top:1px solid #edf0f2;padding-top:18px}
+#new .panel{max-width:980px}
+#new .form-grid>div{min-width:0}
+#new input[type=file]{padding:10px;background:#fbfcfc}
+#new input[type=checkbox]{accent-color:#28b8ad}
+#profile .panel{box-shadow:none}
+@media(max-width:760px){
+ .sidebar{background:#fff;padding:14px 13px;border-bottom:1px solid #e5e9ec}
+ .brand{padding:0 5px 12px}
+ .brand small{color:#8b969c}
+ .nav{gap:4px}
+ .nav button{background:#f5f7f8}
+ .nav button.active{background:#eaf7f6}
+ .main{padding:22px 15px 40px}
+ .topbar{margin-bottom:25px}
+ .stats{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+ .stat{padding:13px 10px}
+ .stat strong{font-size:23px}
+ .stat em{font-size:10px}
+ .panel{padding:16px}
+}
+
 </style>
 </head>
 <body>
